@@ -123,7 +123,7 @@
         .btn-print-all { background: #8e44ad; color: #fff; border: none; padding: 10px 12px; border-radius: 4px; font-size: 13px; font-weight: bold; cursor: pointer; margin-top: 10px; width: 100%; }
         
         .btn-row-print { background: #e67e22; color: white; border: none; padding: 3px 6px; font-size: 10.5px; border-radius: 3px; cursor: pointer; font-weight: bold; }
-        .btn-row-download { background: #2980b9; color: white; border: none; padding: 3px 6px; font-size: 10.5px; border-radius: 3px; cursor: pointer; font-weight: bold; }
+        .btn-row-download { background: #2980b9; color: white; border: none; padding: 4px 8px; font-size: 11px; border-radius: 3px; cursor: pointer; font-weight: bold; }
         .btn-row-print:hover { background: #d35400; }
         .btn-row-download:hover { background: #1f618d; }
 
@@ -340,7 +340,7 @@
 
         <!-- 3. समय व पूल सेटिंग्स कार्ड -->
         <div class="controls-card" id="timeSettingsBox" style="background:#e8f4f8; border-color:#aed6f1;">
-            <h3 style="color:#1b4f72; border-color:#aed6f1;">⏱️ पानी समय एवं पूल सेटिंग्स</h3>
+            <h3 style="color:#1b4f72; border-color:#aed6f1;">⏱️ पानी का कुल समय व शुरुआती समय सेटिंग्स</h3>
             <div class="input-group">
                 <label for="totalPoolHours">कुल उपलब्ध पानी समय (घंटे):</label>
                 <input type="text" id="totalPoolHours" value="24" inputmode="decimal" pattern="[0-9.]*" oninput="debouncedCalculate(); markDataDirty();">
@@ -420,9 +420,12 @@
                     <th id="evenHeaderCol" class="red-txt">Even (उल्टी बारी)</th>
                     <th class="red-txt">से (शुरुआत)</th>
                     <th class="red-txt">तक (समाप्ति)</th>
-                    <th style="width: 65px;">धनराशी</th>
+                    <th style="width: 85px;">
+                        <div>धनराशी</div>
+                        <input type="text" inputmode="numeric" pattern="[0-9]*" id="fixedRateInput" value="100" placeholder="नियत ₹" title="तय शुल्क / कुल देय राशि दर्ज करें" style="width:55px; text-align:center; padding:2px; font-size:11px; margin-top:2px; border:1px solid #27ae60; border-radius:3px; font-weight:bold; color:#1b4f72;" oninput="findMyTurn(); markDataDirty();">
+                    </th>
                     <th style="width: 75px;">रू० प्राप्त तारीख</th>
-                    <th style="width: 100px;">पर्ची</th>
+                    <th style="width: 80px;">पर्ची</th>
                     <th id="actionHeader" style="display:none; width: 110px;">क्रम/नाम</th>
                     <th id="deleteHeader" style="display:none; width: 50px;">हटाएं</th>
                 </tr>
@@ -822,6 +825,7 @@
         if(record.startDate && document.getElementById('startDateInput')) document.getElementById('startDateInput').value = record.startDate;
         if(record.gapDays && document.getElementById('intervalInput')) document.getElementById('intervalInput').value = record.gapDays;
         if(record.startTime !== undefined && document.getElementById('startTime')) document.getElementById('startTime').value = record.startTime;
+        if(record.fixedRate !== undefined && document.getElementById('fixedRateInput')) document.getElementById('fixedRateInput').value = record.fixedRate;
     }
 
     async function loadDataFromCloud() {
@@ -887,6 +891,7 @@
             totalPoolHours: document.getElementById('totalPoolHours') ? document.getElementById('totalPoolHours').value : "24",
             hoursToDistribute: document.getElementById('hoursToDistribute') ? document.getElementById('hoursToDistribute').value : "24",
             startTime: document.getElementById('startTime') ? document.getElementById('startTime').value : "07:00:00 AM",
+            fixedRate: document.getElementById('fixedRateInput') ? document.getElementById('fixedRateInput').value : "100",
             users: initialData
         };
 
@@ -1217,10 +1222,7 @@
                 <td><input type="text" inputmode="numeric" pattern="[0-9]*" class="clean-input" data-row-idx="${idx}" data-field="amount" style="width:60px; text-align:center;" value="${row.amount || ''}" placeholder="0" oninput="updateRowFieldInline(${idx}, 'amount', this.value);"></td>
                 <td><input type="text" class="clean-input" data-row-idx="${idx}" data-field="date" style="width:75px; text-align:center;" value="${row.date || ''}" placeholder="DD MM YY" oninput="updateRowFieldInline(${idx}, 'date', this.value)"></td>
                 <td>
-                    <div style="display:flex; flex-direction:column; gap:3px; align-items:center;">
-                        <button class="btn-row-print" onclick="printRowSlip(${idx})" title="पर्ची प्रिंट करें">🖨️ प्रिंट</button>
-                        <button class="btn-row-download" onclick="downloadRowSlip(${idx})" title="पर्ची JPEG डाउनलोड करें">📥 डाउनलोड</button>
-                    </div>
+                    <button class="btn-row-download" onclick="downloadRowSlip(${idx})" title="पर्ची JPEG डाउनलोड करें">📥 डाउनलोड</button>
                 </td>
                 <td style="display: ${showActionsCol ? 'table-cell' : 'none'};">${actionButtonsHtml}</td>
                 <td style="display: ${isAdmin ? 'table-cell' : 'none'};"><button class="btn-delete" onclick="deleteRow(${idx})">❌</button></td>
@@ -1265,7 +1267,7 @@
         setToggleBtnStyle('toggleSummaryBtn', isSummaryPublic, 'सारांश बॉक्स (Summary)');
         setToggleBtnStyle('toggleDateSettingsBtn', isDateSettingsPublic, 'तारीख व गैप बॉक्स');
         setToggleBtnStyle('toggleModeCardBtn', isModeCardPublic, 'बांटने का तरीका (Mode Box)');
-        setToggleBtnStyle('toggleTimeSettingsBtn', isTimeSettingsPublic, 'पूल व शुरुआती समय सेटिंग्स');
+        setToggleBtnStyle('toggleTimeSettingsBtn', isTimeSettingsPublic, 'कुल समय व शुरुआत समय सेटिंग्स');
         setToggleBtnStyle('togglePrintAllBtn', isPrintAllPublic, 'सभी पर्ची प्रिंट बटन');
     }
 
@@ -1402,7 +1404,16 @@
         }
 
         let user = initialData[selIdx];
-        let duesHtml = (user.amount && user.amount > 0) ? `<div class="due-msg">धनराशि: ₹${user.amount} (जमा तारीख: ${user.date || 'नियत नहीं'})</div>` : '';
+        
+        let fixedRateVal = parseFloat(document.getElementById('fixedRateInput') ? document.getElementById('fixedRateInput').value : 0) || 0;
+        let paidAmountVal = parseFloat(user.amount) || 0;
+        let duesHtml = '';
+
+        if (fixedRateVal > 0 && paidAmountVal < fixedRateVal) {
+            let dueAmount = fixedRateVal - paidAmountVal;
+            duesHtml = `<div class="due-msg">बकाया: ₹${dueAmount} (कुल ₹${fixedRateVal} में से ₹${paidAmountVal} प्राप्त | भुगतान बाकी है)</div>`;
+        }
+
         let hoursToDistribute = parseFloat(document.getElementById('hoursToDistribute').value) || 24;
         let startStr = document.getElementById('startTime').value.trim();
 
@@ -1483,7 +1494,16 @@
 
     function getFormattedSlipHTML(userIndex) {
         let user = initialData[userIndex];
-        let duesSlipHtml = (user.amount && user.amount > 0) ? `<div class="slip-field" style="color:#c0392b; font-weight:bold;">बकाया: ₹${user.amount} (भुगतान बाकी है)</div>` : '';
+        
+        let fixedRateVal = parseFloat(document.getElementById('fixedRateInput') ? document.getElementById('fixedRateInput').value : 0) || 0;
+        let paidAmountVal = parseFloat(user.amount) || 0;
+        let duesSlipHtml = '';
+
+        if (fixedRateVal > 0 && paidAmountVal < fixedRateVal) {
+            let dueAmount = fixedRateVal - paidAmountVal;
+            duesSlipHtml = `<div class="slip-field" style="color:#c0392b; font-weight:bold;">बकाया: ₹${dueAmount} (कुल ₹${fixedRateVal} में से ₹${paidAmountVal} प्राप्त | भुगतान बाकी है)</div>`;
+        }
+
         let hoursToDistribute = parseFloat(document.getElementById('hoursToDistribute').value) || 24;
         let startStr = document.getElementById('startTime').value.trim();
 
