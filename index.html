@@ -758,7 +758,7 @@ function submitNewPassword() {
 
         if (record.password) {
             adminPassword = String(record.password);
-            localStorage.setItem('ADMIN_PASS', adminPassword);
+            localStorage.setItem('ADMIN_PASS_BIN_12', adminPassword);
         } else {
             let savedPass = localStorage.getItem('ADMIN_PASS');
             if (savedPass) adminPassword = savedPass;
@@ -854,7 +854,7 @@ function submitNewPassword() {
 
         saveCurrentModeState();
 
-        let activePass = localStorage.getItem('ADMIN_PASS') || String(adminPassword);
+        let activePass = localStorage.getItem('ADMIN_PASS_BIN_12') || String(adminPassword);
 
         let payload = {
             password: activePass,
