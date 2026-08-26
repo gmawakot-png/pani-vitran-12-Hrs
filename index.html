@@ -961,20 +961,24 @@
         }
     }
 
-    function getShiftTotalMinutes(isReverseOrder, shiftHours, isOddType) {
+    function getShiftTotalMinutes(isReverseOrder, shiftHours, isOddType, ignoreFirstExtra = false) {
         let totalBigha = initialData.reduce((acc, curr) => acc + (parseFloat(curr.bigha) || 0), 0);
         let targetTotalMinutes = shiftHours * 60;
+        let list = isReverseOrder ? [...initialData].reverse() : [...initialData];
         let totalGroupMins = 0;
-        for (let row of initialData) {
+        list.forEach((row, idx) => {
             let bigha = parseFloat(row.bigha) || 0;
             let pureMins = (totalBigha > 0) ? (bigha * targetTotalMinutes / totalBigha) : 0;
             let extraMins = isOddType ? (parseFloat(row.oddMinutes) || 0) : (parseFloat(row.evenMinutes) || 0);
+            if (idx === 0 && ignoreFirstExtra) {
+                extraMins = 0;
+            }
             totalGroupMins += (pureMins + extraMins);
-        }
+        });
         return totalGroupMins;
     }
 
-    function getTurnSlotCustom(userObj, isReverseOrder, shiftHours, startStr, isOddType) {
+    function getTurnSlotCustom(userObj, isReverseOrder, shiftHours, startStr, isOddType, ignoreFirstExtra = false) {
         let totalBigha = initialData.reduce((acc, curr) => acc + (parseFloat(curr.bigha) || 0), 0);
         let targetTotalMinutes = shiftHours * 60;
 
@@ -982,10 +986,14 @@
         let beforeMinutes = 0;
         let userMinutes = 0;
 
-        for (let row of list) {
+        for (let i = 0; i < list.length; i++) {
+            let row = list[i];
             let bigha = parseFloat(row.bigha) || 0;
             let pureMins = (totalBigha > 0) ? (bigha * targetTotalMinutes / totalBigha) : 0;
             let extraMins = isOddType ? (parseFloat(row.oddMinutes) || 0) : (parseFloat(row.evenMinutes) || 0);
+            if (i === 0 && ignoreFirstExtra) {
+                extraMins = 0; // मोड़ पर तुरंत शुरू होने वाले पहले व्यक्ति को अतिरिक्त समय नहीं
+            }
             let totalMins = pureMins + extraMins;
 
             if (row.name.trim() === userObj.name.trim()) {
@@ -1417,7 +1425,7 @@
         resBox.style.display = 'block';
 
         if (selectedMode === "straight") {
-            let slot = getTurnSlotCustom(user, isTableReversed, hoursToDistribute, startStr, !isTableReversed);
+            let slot = getTurnSlotCustom(user, isTableReversed, hoursToDistribute, startStr, !isTableReversed, false);
             let hPart = Math.floor(slot.minutes / 60);
             let mPart = Math.round(slot.minutes % 60);
             let allDates = waterDates.join(', ') || 'निर्दिष्ट नहीं';
@@ -1439,17 +1447,17 @@
             let primaryIsRev = isTableReversed;
             let secondaryIsRev = !isTableReversed;
 
-            let group1Mins = getShiftTotalMinutes(primaryIsRev, halfH, !primaryIsRev);
+            let group1Mins = getShiftTotalMinutes(primaryIsRev, halfH, !primaryIsRev, false);
             let midTimeStrGroupA = addMinutesToTime(startStr, group1Mins);
 
-            let slot1_Shift1 = getTurnSlotCustom(user, primaryIsRev, halfH, startStr, !primaryIsRev);
-            let slot1_Shift2 = getTurnSlotCustom(user, secondaryIsRev, halfH, midTimeStrGroupA, primaryIsRev);
+            let slot1_Shift1 = getTurnSlotCustom(user, primaryIsRev, halfH, startStr, !primaryIsRev, false);
+            let slot1_Shift2 = getTurnSlotCustom(user, secondaryIsRev, halfH, midTimeStrGroupA, primaryIsRev, true);
 
-            let group2Mins = getShiftTotalMinutes(secondaryIsRev, halfH, primaryIsRev);
+            let group2Mins = getShiftTotalMinutes(secondaryIsRev, halfH, primaryIsRev, false);
             let midTimeStrGroupB = addMinutesToTime(startStr, group2Mins);
 
-            let slot2_Shift1 = getTurnSlotCustom(user, secondaryIsRev, halfH, startStr, primaryIsRev);
-            let slot2_Shift2 = getTurnSlotCustom(user, primaryIsRev, halfH, midTimeStrGroupB, !primaryIsRev);
+            let slot2_Shift1 = getTurnSlotCustom(user, secondaryIsRev, halfH, startStr, primaryIsRev, false);
+            let slot2_Shift2 = getTurnSlotCustom(user, primaryIsRev, halfH, midTimeStrGroupB, !primaryIsRev, true);
 
             let h1_1 = Math.floor(slot1_Shift1.minutes / 60), m1_1 = Math.round(slot1_Shift1.minutes % 60);
             let h1_2 = Math.floor(slot1_Shift2.minutes / 60), m1_2 = Math.round(slot1_Shift2.minutes % 60);
@@ -1469,8 +1477,8 @@
                 ${duesHtml}
             `;
         } else {
-            let slotOdd = getTurnSlotCustom(user, isTableReversed, hoursToDistribute, startStr, !isTableReversed);  
-            let slotEven = getTurnSlotCustom(user, !isTableReversed, hoursToDistribute, startStr, isTableReversed); 
+            let slotOdd = getTurnSlotCustom(user, isTableReversed, hoursToDistribute, startStr, !isTableReversed, false);  
+            let slotEven = getTurnSlotCustom(user, !isTableReversed, hoursToDistribute, startStr, isTableReversed, false); 
 
             let hPartOdd = Math.floor(slotOdd.minutes / 60), mPartOdd = Math.round(slotOdd.minutes % 60);
             let hPartEven = Math.floor(slotEven.minutes / 60), mPartEven = Math.round(slotEven.minutes % 60);
@@ -1509,7 +1517,7 @@
         let evenDatesList = waterDates.filter((_, idx) => idx % 2 !== 0).join(', ') || 'निर्दिष्ट नहीं';
 
         if (selectedMode === "straight") {
-            let slot = getTurnSlotCustom(user, isTableReversed, hoursToDistribute, startStr, !isTableReversed);
+            let slot = getTurnSlotCustom(user, isTableReversed, hoursToDistribute, startStr, !isTableReversed, false);
             let hPart = Math.floor(slot.minutes / 60);
             let mPart = Math.round(slot.minutes % 60);
 
@@ -1530,17 +1538,17 @@
             let primaryIsRev = isTableReversed;
             let secondaryIsRev = !isTableReversed;
 
-            let group1Mins = getShiftTotalMinutes(primaryIsRev, halfH, !primaryIsRev);
+            let group1Mins = getShiftTotalMinutes(primaryIsRev, halfH, !primaryIsRev, false);
             let midTimeStrGroupA = addMinutesToTime(startStr, group1Mins);
 
-            let slot1_Shift1 = getTurnSlotCustom(user, primaryIsRev, halfH, startStr, !primaryIsRev);
-            let slot1_Shift2 = getTurnSlotCustom(user, secondaryIsRev, halfH, midTimeStrGroupA, primaryIsRev);
+            let slot1_Shift1 = getTurnSlotCustom(user, primaryIsRev, halfH, startStr, !primaryIsRev, false);
+            let slot1_Shift2 = getTurnSlotCustom(user, secondaryIsRev, halfH, midTimeStrGroupA, primaryIsRev, true);
 
-            let group2Mins = getShiftTotalMinutes(secondaryIsRev, halfH, primaryIsRev);
+            let group2Mins = getShiftTotalMinutes(secondaryIsRev, halfH, primaryIsRev, false);
             let midTimeStrGroupB = addMinutesToTime(startStr, group2Mins);
 
-            let slot2_Shift1 = getTurnSlotCustom(user, secondaryIsRev, halfH, startStr, primaryIsRev);
-            let slot2_Shift2 = getTurnSlotCustom(user, primaryIsRev, halfH, midTimeStrGroupB, !primaryIsRev);
+            let slot2_Shift1 = getTurnSlotCustom(user, secondaryIsRev, halfH, startStr, primaryIsRev, false);
+            let slot2_Shift2 = getTurnSlotCustom(user, primaryIsRev, halfH, midTimeStrGroupB, !primaryIsRev, true);
 
             let h1_1 = Math.floor(slot1_Shift1.minutes / 60), m1_1 = Math.round(slot1_Shift1.minutes % 60);
             let h1_2 = Math.floor(slot1_Shift2.minutes / 60), m1_2 = Math.round(slot1_Shift2.minutes % 60);
@@ -1569,8 +1577,8 @@
                 <div class="slip-footer-txt">सिंचाई प्रबंधन समिति</div>
             </div>`;
         } else {
-            let slotOdd = getTurnSlotCustom(user, isTableReversed, hoursToDistribute, startStr, !isTableReversed); 
-            let slotEven = getTurnSlotCustom(user, !isTableReversed, hoursToDistribute, startStr, isTableReversed); 
+            let slotOdd = getTurnSlotCustom(user, isTableReversed, hoursToDistribute, startStr, !isTableReversed, false); 
+            let slotEven = getTurnSlotCustom(user, !isTableReversed, hoursToDistribute, startStr, isTableReversed, false); 
 
             let hPart1 = Math.floor(slotOdd.minutes / 60), mPart1 = Math.round(slotOdd.minutes % 60);
             let hPart2 = Math.floor(slotEven.minutes / 60), mPart2 = Math.round(slotEven.minutes % 60);
