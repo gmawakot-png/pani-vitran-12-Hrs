@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>पानी सिंचाई वितरण सारणी</title>
+    <!-- JPEG/इमेज डाउनलोड लाइब्रेरी -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
         * { box-sizing: border-box; font-family: 'Segoe UI', Arial, sans-serif; }
         body { background-color: #f4f7f6; margin: 0; padding: 10px; color: #333; padding-bottom: 100px; }
@@ -91,7 +93,7 @@
         .summary-table td { padding: 5px 6px; font-size: 13px; border-bottom: 1px dashed #cbd5e1; }
         .summary-table td.val { text-align: right; font-weight: bold; color: #c0392b; }
         .table-responsive { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; margin-bottom: 15px; border: 1px solid #a6acaf; border-radius: 4px; }
-        table.main-table { width: 100%; min-width: 900px; border-collapse: collapse; font-size: 12px; }
+        table.main-table { width: 100%; min-width: 950px; border-collapse: collapse; font-size: 12px; }
         table.main-table th, table.main-table td { border: 1px solid #cbd5e1; padding: 6px 4px; text-align: center; white-space: nowrap; }
         table.main-table th { background-color: #ebedef; font-weight: bold; color: #2c3e50; }
         table.main-table th.red-txt, table.main-table td.red-txt { color: #c0392b; }
@@ -117,9 +119,13 @@
         .btn-action { background: #27ae60; color: #fff; width: 100%; padding: 8px; margin-top: 5px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; }
         .btn-view-chart { background: #16a085; color: #fff; border: none; padding: 8px 12px; border-radius: 4px; font-size: 12px; font-weight: bold; cursor: pointer; margin-top: 8px; width: 100%; }
         .btn-print-slip { background: #e67e22; color: #fff; border: none; padding: 8px 12px; border-radius: 4px; font-size: 12px; font-weight: bold; cursor: pointer; margin-top: 5px; width: 100%; display: none; }
+        .btn-download-slip { background: #2980b9; color: #fff; border: none; padding: 8px 12px; border-radius: 4px; font-size: 12px; font-weight: bold; cursor: pointer; margin-top: 5px; width: 100%; display: none; }
         .btn-print-all { background: #8e44ad; color: #fff; border: none; padding: 10px 12px; border-radius: 4px; font-size: 13px; font-weight: bold; cursor: pointer; margin-top: 10px; width: 100%; }
         
-        .btn-row-print { background: #e67e22; color: white; border: none; padding: 3px 5px; font-size: 11px; border-radius: 3px; cursor: pointer; font-weight: bold; }
+        .btn-row-print { background: #e67e22; color: white; border: none; padding: 3px 6px; font-size: 10.5px; border-radius: 3px; cursor: pointer; font-weight: bold; }
+        .btn-row-download { background: #2980b9; color: white; border: none; padding: 3px 6px; font-size: 10.5px; border-radius: 3px; cursor: pointer; font-weight: bold; }
+        .btn-row-print:hover { background: #d35400; }
+        .btn-row-download:hover { background: #1f618d; }
 
         .full-chart-box { display: none; margin-top: 10px; padding: 10px; background: #fcf3cf; border: 1px solid #f1c40f; border-radius: 5px; font-size: 12px; max-height: 250px; overflow-y: auto; }
         
@@ -206,23 +212,23 @@
         #printableArea { display: none; }
 
         .slip-box {
-            width: 100%; padding: 4px 6px; border: 1px dashed #444; font-family: Arial, sans-serif;
-            background: #fff; box-sizing: border-box; border-radius: 3px; color: #111; font-size: 7.5px; line-height: 1.2;
+            width: 100%; padding: 6px 8px; border: 1px dashed #444; font-family: Arial, sans-serif;
+            background: #fff; box-sizing: border-box; border-radius: 4px; color: #111; font-size: 8px; line-height: 1.3;
             page-break-inside: avoid !important; break-inside: avoid !important;
         }
         .slip-header-title {
-            text-align: center; font-size: 9px; font-weight: bold; color: #0b5ed7;
-            border-bottom: 1px solid #000; padding-bottom: 1px; margin-bottom: 2px;
+            text-align: center; font-size: 9.5px; font-weight: bold; color: #0b5ed7;
+            border-bottom: 1px solid #000; padding-bottom: 2px; margin-bottom: 3px;
         }
-        .slip-section-title { font-size: 8px; font-weight: bold; color: #000; margin-top: 1px; margin-bottom: 1px; }
-        .slip-field { font-size: 7.5px; margin-bottom: 1px; white-space: normal; word-break: break-word; }
+        .slip-section-title { font-size: 8.5px; font-weight: bold; color: #000; margin-top: 1px; margin-bottom: 1px; }
+        .slip-field { font-size: 8px; margin-bottom: 1.5px; white-space: normal; word-break: break-word; }
         .slip-field b { color: #000; }
         .slip-time-txt { color: #1a5276; font-weight: bold; }
         .slip-even-time { color: #c0392b; font-weight: bold; }
-        .slip-dates-list { color: #1e8449; font-weight: bold; font-size: 7px; word-break: break-all; }
-        .slip-divider { border-top: 1px dashed #888; margin: 2px 0; }
+        .slip-dates-list { color: #1e8449; font-weight: bold; font-size: 7.5px; word-break: break-all; }
+        .slip-divider { border-top: 1px dashed #888; margin: 3px 0; }
         .slip-footer-txt {
-            margin-top: 2px; text-align: center; font-size: 7px; border-top: 1px solid #ccc; padding-top: 1px; color: #555; font-weight: bold;
+            margin-top: 3px; text-align: center; font-size: 7.5px; border-top: 1px solid #ccc; padding-top: 2px; color: #555; font-weight: bold;
         }
 
         @media print {
@@ -297,7 +303,11 @@
             
             <div id="turnResult" class="result-box"></div>
 
-            <button class="btn-print-slip" id="printSlipBtn" onclick="printSelectedSlip()">🖨️ इस सदस्य की पर्ची प्रिंट करें</button>
+            <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                <button class="btn-print-slip" id="printSlipBtn" style="flex:1;" onclick="printSelectedSlip()">🖨️ पर्ची प्रिंट करें</button>
+                <button class="btn-download-slip" id="downloadSlipBtn" style="flex:1;" onclick="downloadSelectedSlip()">📥 पर्ची (JPEG) डाउनलोड करें</button>
+            </div>
+
             <button class="btn-view-chart" onclick="toggleFullChart()">📅 पूरे महीने की सिंचाई तारीखें (Full Chart)</button>
 
             <div id="fullChartBox" class="full-chart-box">
@@ -330,7 +340,7 @@
 
         <!-- 3. समय व पूल सेटिंग्स कार्ड -->
         <div class="controls-card" id="timeSettingsBox" style="background:#e8f4f8; border-color:#aed6f1;">
-            <h3 style="color:#1b4f72; border-color:#aed6f1;">⏱️ पानी का समय, एंव कुल घन्टे</h3>
+            <h3 style="color:#1b4f72; border-color:#aed6f1;">⏱️ पानी समय एवं पूल सेटिंग्स</h3>
             <div class="input-group">
                 <label for="totalPoolHours">कुल उपलब्ध पानी समय (घंटे):</label>
                 <input type="text" id="totalPoolHours" value="24" inputmode="decimal" pattern="[0-9.]*" oninput="debouncedCalculate(); markDataDirty();">
@@ -401,7 +411,7 @@
         <table class="main-table" id="scheduleTable">
             <thead>
                 <tr>
-                    <th style="width: 85px;" id="sNoHeaderTitle">सुल्टी बारी</th>
+                    <th style="width: 80px;" id="sNoHeaderTitle">सुल्टी बारी</th>
                     <th>नाम</th>
                     <th style="width: 50px;">बीघा</th>
                     <th class="red-txt" style="width: 55px;">मिनट</th>
@@ -412,7 +422,7 @@
                     <th class="red-txt">तक (समाप्ति)</th>
                     <th style="width: 65px;">धनराशी</th>
                     <th style="width: 75px;">रू० प्राप्त तारीख</th>
-                    <th style="width: 55px;">पर्ची</th>
+                    <th style="width: 100px;">पर्ची</th>
                     <th id="actionHeader" style="display:none; width: 110px;">क्रम/नाम</th>
                     <th id="deleteHeader" style="display:none; width: 50px;">हटाएं</th>
                 </tr>
@@ -491,7 +501,7 @@
     
     // दृश्यता (Visibility) सेटिंग्स
     let isTablePublic = true;  
-    let isTableActionsPublic = false; // क्रम/नाम ऊपर-नीचे व नया जोड़ने वाला सेक्शन
+    let isTableActionsPublic = false; 
     let isBottomNoticePublic = true; 
     let isSummaryPublic = true;
     let isDateSettingsPublic = true;
@@ -945,6 +955,7 @@
             document.getElementById('turnResult').innerHTML = "";
             document.getElementById('turnResult').style.display = 'none';
             document.getElementById('printSlipBtn').style.display = 'none';
+            document.getElementById('downloadSlipBtn').style.display = 'none';
         }
     }
 
@@ -1206,7 +1217,10 @@
                 <td><input type="text" inputmode="numeric" pattern="[0-9]*" class="clean-input" data-row-idx="${idx}" data-field="amount" style="width:60px; text-align:center;" value="${row.amount || ''}" placeholder="0" oninput="updateRowFieldInline(${idx}, 'amount', this.value);"></td>
                 <td><input type="text" class="clean-input" data-row-idx="${idx}" data-field="date" style="width:75px; text-align:center;" value="${row.date || ''}" placeholder="DD MM YY" oninput="updateRowFieldInline(${idx}, 'date', this.value)"></td>
                 <td>
-                    <button class="btn-row-print" onclick="printRowSlip(${idx})">🖨️ पर्ची</button>
+                    <div style="display:flex; flex-direction:column; gap:3px; align-items:center;">
+                        <button class="btn-row-print" onclick="printRowSlip(${idx})" title="पर्ची प्रिंट करें">🖨️ प्रिंट</button>
+                        <button class="btn-row-download" onclick="downloadRowSlip(${idx})" title="पर्ची JPEG डाउनलोड करें">📥 डाउनलोड</button>
+                    </div>
                 </td>
                 <td style="display: ${showActionsCol ? 'table-cell' : 'none'};">${actionButtonsHtml}</td>
                 <td style="display: ${isAdmin ? 'table-cell' : 'none'};"><button class="btn-delete" onclick="deleteRow(${idx})">❌</button></td>
@@ -1251,7 +1265,7 @@
         setToggleBtnStyle('toggleSummaryBtn', isSummaryPublic, 'सारांश बॉक्स (Summary)');
         setToggleBtnStyle('toggleDateSettingsBtn', isDateSettingsPublic, 'तारीख व गैप बॉक्स');
         setToggleBtnStyle('toggleModeCardBtn', isModeCardPublic, 'बांटने का तरीका (Mode Box)');
-        setToggleBtnStyle('toggleTimeSettingsBtn', isTimeSettingsPublic, 'कुल घन्टे व शुरुआती समय सेटिंग्स');
+        setToggleBtnStyle('toggleTimeSettingsBtn', isTimeSettingsPublic, 'पूल व शुरुआती समय सेटिंग्स');
         setToggleBtnStyle('togglePrintAllBtn', isPrintAllPublic, 'सभी पर्ची प्रिंट बटन');
     }
 
@@ -1377,11 +1391,13 @@
         let selIdx = parseInt(document.getElementById('userSelect').value);
         let resBox = document.getElementById('turnResult');
         let printBtn = document.getElementById('printSlipBtn');
+        let downloadBtn = document.getElementById('downloadSlipBtn');
 
         if(isNaN(selIdx) || selIdx < 0) {
             resBox.innerHTML = "";
             resBox.style.display = 'none';
             printBtn.style.display = 'none';
+            downloadBtn.style.display = 'none';
             return;
         }
 
@@ -1462,6 +1478,7 @@
             `;
         }
         printBtn.style.display = 'block';
+        downloadBtn.style.display = 'block';
     }
 
     function getFormattedSlipHTML(userIndex) {
@@ -1577,6 +1594,71 @@
         window.print();
     }
 
+    // JPEG (फोटो) के रूप में पर्ची डाउनलोड करने का फ़ंक्शन
+    function downloadRowSlip(idx) {
+        let user = initialData[idx];
+        let slipHtml = getFormattedSlipHTML(idx);
+
+        let tempContainer = document.createElement('div');
+        tempContainer.style.position = 'fixed';
+        tempContainer.style.top = '-9999px';
+        tempContainer.style.left = '0';
+        tempContainer.style.padding = '16px';
+        tempContainer.style.background = '#ffffff';
+        tempContainer.style.width = '360px';
+        tempContainer.style.fontFamily = 'Arial, sans-serif';
+        tempContainer.innerHTML = slipHtml;
+
+        let slipBox = tempContainer.querySelector('.slip-box');
+        if (slipBox) {
+            slipBox.style.fontSize = '12px';
+            slipBox.style.lineHeight = '1.45';
+            slipBox.style.padding = '14px';
+            slipBox.style.border = '2px dashed #27ae60';
+            slipBox.style.borderRadius = '8px';
+            slipBox.style.background = '#ffffff';
+            
+            let titles = tempContainer.querySelectorAll('.slip-header-title');
+            titles.forEach(t => t.style.fontSize = '14px');
+            let secTitles = tempContainer.querySelectorAll('.slip-section-title');
+            secTitles.forEach(t => t.style.fontSize = '13px');
+            let fields = tempContainer.querySelectorAll('.slip-field');
+            fields.forEach(t => t.style.fontSize = '11.5px');
+            let dates = tempContainer.querySelectorAll('.slip-dates-list');
+            dates.forEach(t => t.style.fontSize = '11px');
+        }
+
+        document.body.appendChild(tempContainer);
+
+        let cleanName = (user.name || 'सदस्य').replace(/[^\u0900-\u097Fa-zA-Z0-9]/g, '_');
+
+        if (window.html2canvas) {
+            html2canvas(tempContainer, {
+                scale: 3, // HD क्वालिटी
+                useCORS: true,
+                backgroundColor: '#ffffff'
+            }).then(canvas => {
+                let link = document.createElement('a');
+                link.download = `${cleanName}_सिंचाई_पर्ची.jpg`;
+                link.href = canvas.toDataURL('image/jpeg', 0.95);
+                link.click();
+                document.body.removeChild(tempContainer);
+            }).catch(() => {
+                document.body.removeChild(tempContainer);
+                alert("डाउनलोड करने में समस्या आई!");
+            });
+        } else {
+            printRowSlip(idx);
+            document.body.removeChild(tempContainer);
+        }
+    }
+
+    function downloadSelectedSlip() {
+        let selIdx = document.getElementById('userSelect').value;
+        if(selIdx === "") { alert("कृपया पहले नाम चुनें!"); return; }
+        downloadRowSlip(parseInt(selIdx));
+    }
+
     function printAllSlips() {
         generate30DaysCalendar(); 
         let area = document.getElementById('printableArea');
@@ -1601,6 +1683,17 @@
         }
     }
 
+    // ⚡ स्क्रीन ग्लिच से बचने के लिए तुरंत लोकल कैश लोड
+    try {
+        let localRaw = localStorage.getItem('WATER_SCHEDULE_DATA');
+        if (localRaw) {
+            let localRecord = JSON.parse(localRaw);
+            applyLoadedRecord(localRecord);
+        }
+    } catch(e) {}
+    calculateAll();
+
+    // इसके बाद बैकग्राउंड में सुरक्षित क्लाउड सिंक
     window.onload = function() {
         loadDataFromCloud();
     };
