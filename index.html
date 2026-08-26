@@ -36,10 +36,10 @@
         .top-section { display: flex; flex-wrap: wrap; gap: 15px; margin-bottom: 15px; }
         .controls-card, .summary-card, .search-card, .notice-card, .mode-card { background: #eef5f9; border: 1px solid #b8daff; border-radius: 6px; padding: 12px; flex: 1; min-width: 260px; }
         
-        .mode-card { background: #fef3c7; border-color: #f59e0b; margin-bottom: 12px; }
+        .mode-card { background: #fef3c7; border-color: #f59e0b; }
         .mode-card h3 { color: #92400e; border-bottom: 1px solid #f59e0b; margin-top: 0; font-size: 15px; padding-bottom: 5px; }
-        .mode-options { display: flex; gap: 12px; margin-top: 8px; flex-wrap: wrap; }
-        .mode-options label { font-weight: bold; font-size: 12.5px; cursor: pointer; display: flex; align-items: center; gap: 4px; color: #78350f; background: #fff3cd; padding: 4px 8px; border-radius: 4px; border: 1px solid #f59e0b; }
+        .mode-options { display: flex; gap: 10px; margin-top: 8px; flex-wrap: wrap; }
+        .mode-options label { font-weight: bold; font-size: 12.5px; cursor: pointer; display: flex; align-items: center; gap: 4px; color: #78350f; background: #fff3cd; padding: 5px 8px; border-radius: 4px; border: 1px solid #f59e0b; }
 
         .controls-card h3, .summary-card h3, .search-card h3, .notice-card h3 { margin-top: 0; color: #0c5460; font-size: 15px; border-bottom: 1px solid #b8daff; padding-bottom: 5px; }
         .input-group { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; gap: 8px; }
@@ -189,6 +189,16 @@
         }
         .clean-input:focus { border-color: #2980b9; }
 
+        .custom-toggle-btn {
+            font-size: 11.5px;
+            padding: 6px 8px;
+            text-align: left;
+            margin-top: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
         @media screen and (max-width: 768px) {
             .clean-input, .input-group input, .input-group select { font-size: 14px !important; }
         }
@@ -253,6 +263,7 @@
     </div>
 
     <div class="top-section" style="margin-top: 10px;">
+        <!-- 1. नाम व बारी खोज कार्ड -->
         <div class="search-card">
             <h3>💧 पानी की अगली बारी की जानकारी</h3>
 
@@ -263,6 +274,7 @@
                 </select>
             </div>
 
+            <!-- तारीख व दिन का गैप बॉक्स -->
             <div class="admin-date-controls" id="directAdminDateBox" style="background:#eef9f2; border:1px solid #a3e4d7;">
                 <b style="color:#1e8449; font-size:12px;">🗓️ तारीख व दिन का गैप बदलें (प्रिंट हेतु):</b>
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-top:6px; gap:8px;">
@@ -292,49 +304,33 @@
                 <b>🗓️ पूरे महीने का ऑटो-जनरेट शेड्यूल:</b>
                 <ol id="datesList" style="margin: 5px 0; padding-left: 20px;"></ol>
             </div>
+            
+            <!-- सभी पर्चियां प्रिंट बटन -->
+            <button class="btn-print-all" id="printAllSlipsBtnBox" onclick="printAllSlips()">🖨️ पूरे महीने की सभी पर्चियां प्रिंट करें (18 प्रति पेज)</button>
         </div>
 
-        <div class="notice-card">
-            <h3>📢 सूचना एवं विवरण</h3>
-            <div id="noticeDisplay" class="notice-content">कोई विशेष सूचना उपलब्ध नहीं है।</div>
-            <div class="admin-only-block" style="margin-top: 8px;">
-                <label style="font-size:11px; font-weight:bold; display:block; margin-bottom:4px;">एडमिन संदेश संपादन (Edit Message):</label>
-                <textarea id="noticeInput" class="notice-textarea" placeholder="यहाँ सभी के लिए सूचना/संदेश लिखें..." oninput="updateNoticeText(this.value); markDataDirty();"></textarea>
+        <!-- 2. मोड चयन कार्ड -->
+        <div class="mode-card" id="modeCardBox">
+            <h3>🚰 पानी बाँटने का तरीका चुनें:</h3>
+            <div class="mode-options">
+                <label>
+                    <input type="radio" name="waterDistributionMode" value="straight" onchange="handleModeChange(this.value)"> 
+                    <b>1. लगातार (Straight)</b>
+                </label>
+                <label>
+                    <input type="radio" name="waterDistributionMode" value="oddeven" onchange="handleModeChange(this.value)"> 
+                    <b>2. औड-इवन (Odd-Even)</b>
+                </label>
+                <label>
+                    <input type="radio" name="waterDistributionMode" value="samedayoddeven" checked onchange="handleModeChange(this.value)"> 
+                    <b>3. Same-Day औड-इवन (Odd-Even)</b>
+                </label>
             </div>
         </div>
 
-        <div class="summary-card">
-            <h3>सारांश (Summary)</h3>
-            <table class="summary-table">
-                <tr><td>कुल बीघा:</td><td class="val" id="sumBigha">0</td></tr>
-                <tr><td>बांटा गया मूल समय:</td><td class="val" id="displayDistributedHM">0 घंटे 0 मिनट</td></tr>
-                <tr><td>सक्रिय अतिरिक्त समय:</td><td class="val" id="displayExtraDistributedHM">0 मिनट</td></tr>
-                <tr><td>कुल पानी वितरण समय:</td><td class="val" id="displayTotalDistributionHM">0 घंटे 0 मिनट</td></tr>
-                <tr><td>आखरी बचा समय:</td><td class="val" id="displayRemainingHours">0 मिनट</td></tr>
-            </table>
-        </div>
-
-        <div class="controls-card admin-only-block" id="adminControls">
-            <h3>एडमिन सेटिंग्स (Admin Only)</h3>
-
-            <div class="mode-card">
-                <h3>🚰 पानी बाँटने का तरीका चुनें:</h3>
-                <div class="mode-options">
-                    <label>
-                        <input type="radio" name="waterDistributionMode" value="straight" onchange="handleModeChange(this.value)"> 
-                        <b>1. लगातार (Straight)</b>
-                    </label>
-                    <label>
-                        <input type="radio" name="waterDistributionMode" value="oddeven" onchange="handleModeChange(this.value)"> 
-                        <b>2. औड-इवन (Odd-Even)</b>
-                    </label>
-                    <label>
-                        <input type="radio" name="waterDistributionMode" value="samedayoddeven" checked onchange="handleModeChange(this.value)"> 
-                        <b>3. Same-Day औड-इवन (Odd-Even)</b>
-                    </label>
-                </div>
-            </div>
-
+        <!-- 3. समय व पूल सेटिंग्स कार्ड -->
+        <div class="controls-card" id="timeSettingsBox" style="background:#e8f4f8; border-color:#aed6f1;">
+            <h3 style="color:#1b4f72; border-color:#aed6f1;">⏱️ पानी समय एवं पूल सेटिंग्स</h3>
             <div class="input-group">
                 <label for="totalPoolHours">कुल उपलब्ध पानी समय (घंटे):</label>
                 <input type="text" id="totalPoolHours" value="24" inputmode="decimal" pattern="[0-9.]*" oninput="debouncedCalculate(); markDataDirty();">
@@ -347,15 +343,50 @@
                 <label for="startTime">शुरुआती समय (Start):</label>
                 <input type="text" id="startTime" value="07:00:00 AM" oninput="debouncedCalculate(); markDataDirty();">
             </div>
+        </div>
 
-            <button class="btn-action" id="toggleTableVisibilityBtn" style="background:#e74c3c; margin-top:8px; margin-bottom:5px;" onclick="toggleTableVisibility()">🔓 पूरी वेबसाइट पब्लिक रखें: चालू</button>
-            <button class="btn-action" id="toggleBottomNoticeBtn" style="background:#27ae60; margin-bottom:5px;" onclick="toggleBottomNoticeVisibility()">🔓 बॉटम संदेश बॉक्स (Public): चालू</button>
+        <!-- 4. सूचना कार्ड -->
+        <div class="notice-card" id="topNoticeCard">
+            <h3>📢 सूचना एवं विवरण</h3>
+            <div id="noticeDisplay" class="notice-content">कोई विशेष सूचना उपलब्ध नहीं है।</div>
+            <div class="admin-only-block" style="margin-top: 8px;">
+                <label style="font-size:11px; font-weight:bold; display:block; margin-bottom:4px;">एडमिन संदेश संपादन (Edit Message):</label>
+                <textarea id="noticeInput" class="notice-textarea" placeholder="यहाँ सभी के लिए सूचना/संदेश लिखें..." oninput="updateNoticeText(this.value); markDataDirty();"></textarea>
+            </div>
+        </div>
+
+        <!-- 5. सारांश कार्ड -->
+        <div class="summary-card" id="summaryCardBox">
+            <h3>सारांश (Summary)</h3>
+            <table class="summary-table">
+                <tr><td>कुल बीघा:</td><td class="val" id="sumBigha">0</td></tr>
+                <tr><td>बांटा गया मूल समय:</td><td class="val" id="displayDistributedHM">0 घंटे 0 मिनट</td></tr>
+                <tr><td>सक्रिय अतिरिक्त समय:</td><td class="val" id="displayExtraDistributedHM">0 मिनट</td></tr>
+                <tr><td>कुल पानी वितरण समय:</td><td class="val" id="displayTotalDistributionHM">0 घंटे 0 मिनट</td></tr>
+                <tr><td>आखरी बचा समय:</td><td class="val" id="displayRemainingHours">0 मिनट</td></tr>
+            </table>
+        </div>
+
+        <!-- 6. एडमिन मास्टर नियंत्रण पैनल -->
+        <div class="controls-card admin-only-block" id="adminControls">
+            <h3>🔐 एडमिन मास्टर कंट्रोल (Admin Only)</h3>
+
+            <!-- पब्लिक दृश्यता टॉगल पैनल -->
+            <div style="background:#ffffff; border:1px solid #cbd5e1; border-radius:6px; padding:10px; margin-top:6px; margin-bottom:10px;">
+                <b style="color:#0c5460; font-size:12.5px; display:block; border-bottom:1px solid #cbd5e1; padding-bottom:4px; margin-bottom:6px;">👁️ पब्लिक स्क्रीन पर क्या-क्या दिखाना है:</b>
+                <button class="btn-action custom-toggle-btn" id="toggleTableVisibilityBtn" onclick="toggleVisibility('isTablePublic')"></button>
+                <button class="btn-action custom-toggle-btn" id="toggleTableActionsBtn" onclick="toggleVisibility('isTableActionsPublic')"></button>
+                <button class="btn-action custom-toggle-btn" id="toggleBottomNoticeBtn" onclick="toggleVisibility('isBottomNoticePublic')"></button>
+                <button class="btn-action custom-toggle-btn" id="toggleSummaryBtn" onclick="toggleVisibility('isSummaryPublic')"></button>
+                <button class="btn-action custom-toggle-btn" id="toggleDateSettingsBtn" onclick="toggleVisibility('isDateSettingsPublic')"></button>
+                <button class="btn-action custom-toggle-btn" id="toggleModeCardBtn" onclick="toggleVisibility('isModeCardPublic')"></button>
+                <button class="btn-action custom-toggle-btn" id="toggleTimeSettingsBtn" onclick="toggleVisibility('isTimeSettingsPublic')"></button>
+                <button class="btn-action custom-toggle-btn" id="togglePrintAllBtn" onclick="toggleVisibility('isPrintAllPublic')"></button>
+            </div>
+
             <button class="btn-action" id="toggleReverseTableBtn" style="background:#d35400; margin-bottom:5px;" onclick="toggleReverseTable()">🔄 उल्टी बारी लागू करें</button>
-            
             <button class="btn-action" style="background:#27ae60;" id="saveBtnMain" onclick="saveDataToCloud()">☁️ क्लाउड में सेव करें</button>
             <button class="btn-action" style="background:#8e44ad;" id="changePassBtnAdmin" onclick="openChangePassModal()">🔑 पासवर्ड बदलें</button>
-            
-            <button class="btn-print-all" onclick="printAllSlips()">🖨️ पूरे महीने की सभी पर्चियां प्रिंट करें (18 प्रति पेज)</button>
         </div>
     </div>
 
@@ -457,14 +488,22 @@
     let adminPassword = "2050"; 
     let noticeMessage = "";
     let bottomNoticeMessage = ""; 
+    
+    // दृश्यता (Visibility) सेटिंग्स
     let isTablePublic = true;  
+    let isTableActionsPublic = false; // क्रम/नाम ऊपर-नीचे व नया जोड़ने वाला सेक्शन
     let isBottomNoticePublic = true; 
+    let isSummaryPublic = true;
+    let isDateSettingsPublic = true;
+    let isModeCardPublic = false;
+    let isTimeSettingsPublic = false;
+    let isPrintAllPublic = false;
+
     let isTableReversed = false; 
     let selectedMode = "samedayoddeven"; 
     let waterDates = [];
     let debounceTimer;
 
-    // मोड़-वार अलग समय और सरणी डेटा स्टोर करने के लिए ऑब्जेक्ट
     let modeDataStore = {
         straight: { totalPoolHours: "24", hoursToDistribute: "24", userMinutes: [] },
         oddeven: { totalPoolHours: "24", hoursToDistribute: "24", userMinutes: [] },
@@ -555,8 +594,17 @@
         document.getElementById('bottomNoticeDisplay').innerText = val.trim() !== "" ? val : "यहाँ महत्वपूर्ण सूचना प्रदर्शित होगी।";
     }
 
-    function toggleTableVisibility() {
-        isTablePublic = !isTablePublic;
+    // विजिबिलिटी टॉगल फ़ंक्शन
+    function toggleVisibility(key) {
+        if (key === 'isTablePublic') isTablePublic = !isTablePublic;
+        else if (key === 'isTableActionsPublic') isTableActionsPublic = !isTableActionsPublic;
+        else if (key === 'isBottomNoticePublic') isBottomNoticePublic = !isBottomNoticePublic;
+        else if (key === 'isSummaryPublic') isSummaryPublic = !isSummaryPublic;
+        else if (key === 'isDateSettingsPublic') isDateSettingsPublic = !isDateSettingsPublic;
+        else if (key === 'isModeCardPublic') isModeCardPublic = !isModeCardPublic;
+        else if (key === 'isTimeSettingsPublic') isTimeSettingsPublic = !isTimeSettingsPublic;
+        else if (key === 'isPrintAllPublic') isPrintAllPublic = !isPrintAllPublic;
+
         renderTable();
         markDataDirty();
     }
@@ -568,13 +616,6 @@
         markDataDirty();
     }
 
-    function toggleBottomNoticeVisibility() {
-        isBottomNoticePublic = !isBottomNoticePublic;
-        renderTable();
-        markDataDirty();
-    }
-
-    // --- मोड्स डेटा स्विचिंग फ़ंक्शंस ---
     function saveCurrentModeState() {
         if (!selectedMode) return;
         let poolH = document.getElementById('totalPoolHours') ? document.getElementById('totalPoolHours').value : "24";
@@ -612,9 +653,9 @@
     }
 
     function handleModeChange(val) {
-        saveCurrentModeState(); // वर्तमान मोड डेटा सेव करें
-        selectedMode = val;     // नया मोड सेट करें
-        loadModeState(selectedMode); // नए मोड का पुराना सेट डेटा लोड करें
+        saveCurrentModeState(); 
+        selectedMode = val;     
+        loadModeState(selectedMode); 
         renderTable();
         populateUserDropdown();
         markDataDirty();
@@ -642,7 +683,7 @@
     function openAdminModal() {
         if(isAdmin) {
             isAdmin = false;
-            alert("व्यू/प्रैक्टिस मोड चालू। (एडमिन एडिट बंद)");
+            alert("व्यू मोड चालू। (एडमिन एडिट बंद)");
             renderTable();
         } else {
             let passInput = document.getElementById('adminPassInput');
@@ -666,7 +707,7 @@
         if(pass === activePass) {
             isAdmin = true;
             closeAdminModal();
-            alert("🔑 एडमिन मोड चालू हो गया है! अब आप जो बदलेंगे वह क्लाउड में स्थायी सेव होगा।");
+            alert("🔑 एडमिन मोड चालू हो गया है!");
             renderTable();
         } else {
             alert("गलत पासवर्ड!");
@@ -705,7 +746,7 @@
                 localStorage.setItem('ADMIN_PASS', newP);
                 closeChangePassModal();
                 alert("✅ नया पासवर्ड लागू हो गया है!");
-                saveDataToCloud(); // तुरंत क्लाउड में भी पासवर्ड सेव करें
+                saveDataToCloud(); 
             } else {
                 alert("कृपया नया पासवर्ड दर्ज करें!");
             }
@@ -717,7 +758,6 @@
     function applyLoadedRecord(record) {
         if(!record) return;
 
-        // पासवर्ड सिंक करें
         if (record.password) {
             adminPassword = String(record.password);
             localStorage.setItem('ADMIN_PASS', adminPassword);
@@ -749,8 +789,17 @@
             if(document.getElementById('bottomNoticeInput')) document.getElementById('bottomNoticeInput').value = bottomNoticeMessage;
             updateBottomNoticeText(bottomNoticeMessage);
         }
+
+        // लोड विजिबिलिटी सेटिंग्स
         if(record.isTablePublic !== undefined) isTablePublic = record.isTablePublic;
+        if(record.isTableActionsPublic !== undefined) isTableActionsPublic = record.isTableActionsPublic;
         if(record.isBottomNoticePublic !== undefined) isBottomNoticePublic = record.isBottomNoticePublic;
+        if(record.isSummaryPublic !== undefined) isSummaryPublic = record.isSummaryPublic;
+        if(record.isDateSettingsPublic !== undefined) isDateSettingsPublic = record.isDateSettingsPublic;
+        if(record.isModeCardPublic !== undefined) isModeCardPublic = record.isModeCardPublic;
+        if(record.isTimeSettingsPublic !== undefined) isTimeSettingsPublic = record.isTimeSettingsPublic;
+        if(record.isPrintAllPublic !== undefined) isPrintAllPublic = record.isPrintAllPublic;
+
         if(record.isTableReversed !== undefined) isTableReversed = record.isTableReversed;
         if(record.selectedMode) {
             selectedMode = record.selectedMode;
@@ -813,7 +862,13 @@
             notice: noticeMessage || "",
             bottomNotice: bottomNoticeMessage || "",
             isTablePublic: isTablePublic,
+            isTableActionsPublic: isTableActionsPublic,
             isBottomNoticePublic: isBottomNoticePublic,
+            isSummaryPublic: isSummaryPublic,
+            isDateSettingsPublic: isDateSettingsPublic,
+            isModeCardPublic: isModeCardPublic,
+            isTimeSettingsPublic: isTimeSettingsPublic,
+            isPrintAllPublic: isPrintAllPublic,
             isTableReversed: isTableReversed,
             selectedMode: selectedMode,
             modeDataStore: modeDataStore,
@@ -866,6 +921,8 @@
 
     function populateUserDropdown() {
         let select = document.getElementById('userSelect');
+        let currentSelectedValue = select.value; 
+
         select.innerHTML = '<option value="">-- नाम चुनें --</option>';
         
         let listToPopulate = [...Array(initialData.length).keys()];
@@ -881,9 +938,14 @@
             select.appendChild(opt);
         });
 
-        document.getElementById('turnResult').innerHTML = "";
-        document.getElementById('turnResult').style.display = 'none';
-        document.getElementById('printSlipBtn').style.display = 'none';
+        if (currentSelectedValue !== "" && select.querySelector(`option[value="${currentSelectedValue}"]`)) {
+            select.value = currentSelectedValue;
+            findMyTurn();
+        } else {
+            document.getElementById('turnResult').innerHTML = "";
+            document.getElementById('turnResult').style.display = 'none';
+            document.getElementById('printSlipBtn').style.display = 'none';
+        }
     }
 
     function getShiftTotalMinutes(isReverseOrder, shiftHours, isOddType) {
@@ -1051,6 +1113,8 @@
         let evenHeader = document.getElementById('evenHeaderCol');
         let modeIndicator = document.getElementById('activeModeIndicator');
 
+        let showActionsCol = isAdmin || isTableActionsPublic;
+
         if(isTableReversed) {
             renderIndices.reverse();
             document.getElementById('sNoHeaderTitle').innerText = "उल्टी बारी";
@@ -1094,17 +1158,14 @@
             let tr = document.createElement('tr');
             if(isAdmin) tr.classList.add('highlight-row');
 
-            let adminActionHtml = '';
-            if(isAdmin) {
-                adminActionHtml = `
-                    <div class="admin-action-container">
-                        <button class="btn-move" onclick="moveRow(${loopIdx}, -1)" ${loopIdx === 0 ? 'disabled' : ''} title="ऊपर">▲</button>
-                        <button class="btn-move" onclick="moveRow(${loopIdx}, 1)" ${loopIdx === renderIndices.length - 1 ? 'disabled' : ''} title="नीचे">▼</button>
-                        <button class="btn-add-inline" onclick="addRowAt(${idx}, 'above')" title="ऊपर नया जोड़ें">+▲</button>
-                        <button class="btn-add-inline" onclick="addRowAt(${idx}, 'below')" title="नीचे नया जोड़ें">+▼</button>
-                    </div>
-                `;
-            }
+            let actionButtonsHtml = `
+                <div class="admin-action-container">
+                    <button class="btn-move" onclick="moveRow(${loopIdx}, -1)" ${loopIdx === 0 ? 'disabled' : ''} title="ऊपर">▲</button>
+                    <button class="btn-move" onclick="moveRow(${loopIdx}, 1)" ${loopIdx === renderIndices.length - 1 ? 'disabled' : ''} title="नीचे">▼</button>
+                    <button class="btn-add-inline" onclick="addRowAt(${idx}, 'above')" title="ऊपर नया जोड़ें">+▲</button>
+                    <button class="btn-add-inline" onclick="addRowAt(${idx}, 'below')" title="नीचे नया जोड़ें">+▼</button>
+                </div>
+            `;
 
             let displayOdd = row.oddMinutes !== undefined ? row.oddMinutes : "";
             let displayEven = row.evenMinutes !== undefined ? row.evenMinutes : "";
@@ -1147,7 +1208,7 @@
                 <td>
                     <button class="btn-row-print" onclick="printRowSlip(${idx})">🖨️ पर्ची</button>
                 </td>
-                <td style="display: ${isAdmin ? 'table-cell' : 'none'};">${adminActionHtml}</td>
+                <td style="display: ${showActionsCol ? 'table-cell' : 'none'};">${actionButtonsHtml}</td>
                 <td style="display: ${isAdmin ? 'table-cell' : 'none'};"><button class="btn-delete" onclick="deleteRow(${idx})">❌</button></td>
             `;
             tbody.appendChild(tr);
@@ -1155,22 +1216,43 @@
 
         updateCalculatedValuesOnly();
 
+        // एडमिन ओनली ब्लॉक्स विजिबिलिटी
         let adminElements = document.querySelectorAll('.admin-only-block');
         adminElements.forEach(el => el.style.display = isAdmin ? 'block' : 'none');
-        document.getElementById('actionHeader').style.display = isAdmin ? 'table-cell' : 'none';
+        
+        document.getElementById('actionHeader').style.display = showActionsCol ? 'table-cell' : 'none';
         document.getElementById('deleteHeader').style.display = isAdmin ? 'table-cell' : 'none';
         document.getElementById('editToggleBtn').innerText = isAdmin ? "🔒 Admin Close" : "🔐 Admin Edit";
         
         document.getElementById('floatingSaveBtn').style.display = isAdmin ? 'block' : 'none';
-        document.getElementById('saveBtnMain').style.display = isAdmin ? 'block' : 'none';
-        document.getElementById('changePassBtnAdmin').style.display = isAdmin ? 'block' : 'none';
-        
-        document.getElementById('toggleTableVisibilityBtn').innerText = isTablePublic ? "🔓 पूरी वेबसाइट पब्लिक रखें: चालू" : "🔒 वेबसाइट प्राइवेट रखें: बंद";
         document.getElementById('toggleReverseTableBtn').innerText = isTableReversed ? "🔄 सुल्टी बारी लागू करें" : "🔄 उल्टी बारी लागू करें";
-        document.getElementById('toggleBottomNoticeBtn').innerText = isBottomNoticePublic ? "🔓 बॉटम संदेश बॉक्स (Public): चालू" : "🔒 बॉटम संदेश बॉक्स (Public): बंद";
-        
+
+        // सभी सेक्शन्स की कस्टम पब्लिक विजिबिलिटी
         document.getElementById('tableWrapper').style.display = (isAdmin || isTablePublic) ? 'block' : 'none';
         document.getElementById('bottomNoticeCardWrapper').style.display = (isAdmin || isBottomNoticePublic) ? 'block' : 'none';
+        document.getElementById('summaryCardBox').style.display = (isAdmin || isSummaryPublic) ? 'block' : 'none';
+        document.getElementById('directAdminDateBox').style.display = (isAdmin || isDateSettingsPublic) ? 'block' : 'none';
+        document.getElementById('modeCardBox').style.display = (isAdmin || isModeCardPublic) ? 'block' : 'none';
+        document.getElementById('timeSettingsBox').style.display = (isAdmin || isTimeSettingsPublic) ? 'block' : 'none';
+        document.getElementById('printAllSlipsBtnBox').style.display = (isAdmin || isPrintAllPublic) ? 'block' : 'none';
+
+        // टॉगल बटन्स टेक्स्ट व स्टाइल
+        let setToggleBtnStyle = (btnId, isPub, labelName) => {
+            let btn = document.getElementById(btnId);
+            if(btn) {
+                btn.innerHTML = `<span>${isPub ? '🔓' : '🔒'} ${labelName}</span> <b style="background:${isPub ? '#1e8449' : '#c0392b'}; padding:2px 6px; border-radius:3px; font-size:10.5px;">${isPub ? 'पब्लिक (चालू)' : 'प्राइवेट (बंद)'}</b>`;
+                btn.style.background = isPub ? '#27ae60' : '#7f8c8d';
+            }
+        };
+
+        setToggleBtnStyle('toggleTableVisibilityBtn', isTablePublic, 'मुख्य सारणी (Table)');
+        setToggleBtnStyle('toggleTableActionsBtn', isTableActionsPublic, 'क्रम/नाम (ऊपर/नीचे व नया जोड़ें)');
+        setToggleBtnStyle('toggleBottomNoticeBtn', isBottomNoticePublic, 'बॉटम सूचना बॉक्स');
+        setToggleBtnStyle('toggleSummaryBtn', isSummaryPublic, 'सारांश बॉक्स (Summary)');
+        setToggleBtnStyle('toggleDateSettingsBtn', isDateSettingsPublic, 'तारीख व गैप बॉक्स');
+        setToggleBtnStyle('toggleModeCardBtn', isModeCardPublic, 'बांटने का तरीका (Mode Box)');
+        setToggleBtnStyle('toggleTimeSettingsBtn', isTimeSettingsPublic, 'पूल व शुरुआती समय सेटिंग्स');
+        setToggleBtnStyle('togglePrintAllBtn', isPrintAllPublic, 'सभी पर्ची प्रिंट बटन');
     }
 
     function updateRowFieldInline(idx, field, val) {
