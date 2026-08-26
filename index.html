@@ -712,6 +712,21 @@
         if(modal) modal.style.display = 'none';
     }
 
+    function openChangePassModal() {
+        let oldIn = document.getElementById('oldPassInput');
+        let newIn = document.getElementById('newPassInput');
+        if (oldIn) oldIn.value = '';
+        if (newIn) newIn.value = '';
+        let modal = document.getElementById('changePassModal');
+        if (modal) modal.style.display = 'flex';
+        setTimeout(() => { if (oldIn) oldIn.focus(); }, 100);
+    }
+
+    function closeChangePassModal() {
+        let modal = document.getElementById('changePassModal');
+        if (modal) modal.style.display = 'none';
+    }
+
     function verifyAdminPassword() {
         let passInput = document.getElementById('adminPassInput');
         let pass = passInput ? passInput.value.trim() : '';
