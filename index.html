@@ -330,7 +330,7 @@
 
         <!-- 3. समय व पूल सेटिंग्स कार्ड -->
         <div class="controls-card" id="timeSettingsBox" style="background:#e8f4f8; border-color:#aed6f1;">
-            <h3 style="color:#1b4f72; border-color:#aed6f1;">⏱️ पानी समय एवं पूल सेटिंग्स</h3>
+            <h3 style="color:#1b4f72; border-color:#aed6f1;">⏱️ पपानी का समय, एंव कुल घन्टे</h3>
             <div class="input-group">
                 <label for="totalPoolHours">कुल उपलब्ध पानी समय (घंटे):</label>
                 <input type="text" id="totalPoolHours" value="24" inputmode="decimal" pattern="[0-9.]*" oninput="debouncedCalculate(); markDataDirty();">
@@ -1251,7 +1251,7 @@
         setToggleBtnStyle('toggleSummaryBtn', isSummaryPublic, 'सारांश बॉक्स (Summary)');
         setToggleBtnStyle('toggleDateSettingsBtn', isDateSettingsPublic, 'तारीख व गैप बॉक्स');
         setToggleBtnStyle('toggleModeCardBtn', isModeCardPublic, 'बांटने का तरीका (Mode Box)');
-        setToggleBtnStyle('toggleTimeSettingsBtn', isTimeSettingsPublic, 'पूल व शुरुआती समय सेटिंग्स');
+        setToggleBtnStyle('toggleTimeSettingsBtn', isTimeSettingsPublic, 'कुल घन्टे व शुरुआती समय सेटिंग्स');
         setToggleBtnStyle('togglePrintAllBtn', isPrintAllPublic, 'सभी पर्ची प्रिंट बटन');
     }
 
