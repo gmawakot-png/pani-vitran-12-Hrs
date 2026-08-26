@@ -712,46 +712,43 @@
         if(modal) modal.style.display = 'none';
     }
 
-    // जहाँ-जहाँ ADMIN_PASS लिखा है, वहाँ ADMIN_PASS_BIN_12 कर लें:
+    function verifyAdminPassword() {
+        let passInput = document.getElementById('adminPassInput');
+        let pass = passInput ? passInput.value.trim() : '';
+        let activePass = localStorage.getItem('ADMIN_PASS_BIN_12') || String(adminPassword).trim();
 
-function verifyAdminPassword() {
-    let passInput = document.getElementById('adminPassInput');
-    let pass = passInput ? passInput.value.trim() : '';
-    // अलग और यूनीक की (Key)
-    let activePass = localStorage.getItem('ADMIN_PASS_BIN_12') || String(adminPassword).trim();
-
-    if(pass === activePass) {
-        isAdmin = true;
-        closeAdminModal();
-        alert("🔑 एडमिन मोड चालू हो गया है!");
-        renderTable();
-    } else {
-        alert("गलत पासवर्ड!");
-    }
-}
-
-function submitNewPassword() {
-    if (!isAdmin) return;
-    let oldIn = document.getElementById('oldPassInput');
-    let newIn = document.getElementById('newPassInput');
-    let oldP = oldIn ? oldIn.value.trim() : '';
-    let newP = newIn ? newIn.value.trim() : '';
-    let activePass = localStorage.getItem('ADMIN_PASS_BIN_12') || String(adminPassword).trim();
-
-    if(oldP === activePass) {
-        if(newP && newP !== "") {
-            adminPassword = newP;
-            localStorage.setItem('ADMIN_PASS_BIN_12', newP);
-            closeChangePassModal();
-            alert("✅ नया पासवर्ड लागू हो गया है!");
-            saveDataToCloud(); 
+        if(pass === activePass) {
+            isAdmin = true;
+            closeAdminModal();
+            alert("🔑 एडमिन मोड चालू हो गया है!");
+            renderTable();
         } else {
-            alert("कृपया नया पासवर्ड दर्ज करें!");
+            alert("गलत पासवर्ड!");
         }
-    } else {
-        alert("पुराना पासवर्ड गलत है!");
     }
-}
+
+    function submitNewPassword() {
+        if (!isAdmin) return;
+        let oldIn = document.getElementById('oldPassInput');
+        let newIn = document.getElementById('newPassInput');
+        let oldP = oldIn ? oldIn.value.trim() : '';
+        let newP = newIn ? newIn.value.trim() : '';
+        let activePass = localStorage.getItem('ADMIN_PASS_BIN_12') || String(adminPassword).trim();
+
+        if(oldP === activePass) {
+            if(newP && newP !== "") {
+                adminPassword = newP;
+                localStorage.setItem('ADMIN_PASS_BIN_12', newP);
+                closeChangePassModal();
+                alert("✅ नया पासवर्ड लागू हो गया है!");
+                saveDataToCloud(); 
+            } else {
+                alert("कृपया नया पासवर्ड दर्ज करें!");
+            }
+        } else {
+            alert("पुराना पासवर्ड गलत है!");
+        }
+    }
 
     function applyLoadedRecord(record) {
         if(!record) return;
@@ -760,7 +757,7 @@ function submitNewPassword() {
             adminPassword = String(record.password);
             localStorage.setItem('ADMIN_PASS_BIN_12', adminPassword);
         } else {
-            let savedPass = localStorage.getItem('ADMIN_PASS');
+            let savedPass = localStorage.getItem('ADMIN_PASS_BIN_12');
             if (savedPass) adminPassword = savedPass;
         }
 
@@ -828,7 +825,7 @@ function submitNewPassword() {
                 let record = jsonResponse.record;
                 if (record && (record.users || record.startDate)) {
                     applyLoadedRecord(record);
-                    localStorage.setItem('WATER_SCHEDULE_DATA', JSON.stringify(record));
+                    localStorage.setItem('WATER_SCHEDULE_DATA_BIN_12', JSON.stringify(record));
                     calculateAll();
                     return;
                 }
@@ -836,7 +833,7 @@ function submitNewPassword() {
         } catch(e) {}
 
         try {
-            let localRaw = localStorage.getItem('WATER_SCHEDULE_DATA');
+            let localRaw = localStorage.getItem('WATER_SCHEDULE_DATA_BIN_12');
             if (localRaw) {
                 let localRecord = JSON.parse(localRaw);
                 applyLoadedRecord(localRecord);
@@ -881,7 +878,7 @@ function submitNewPassword() {
         };
 
         try {
-            localStorage.setItem('WATER_SCHEDULE_DATA', JSON.stringify(payload));
+            localStorage.setItem('WATER_SCHEDULE_DATA_BIN_12', JSON.stringify(payload));
         } catch(e) {}
 
         try {
@@ -1690,7 +1687,7 @@ function submitNewPassword() {
 
     // ⚡ स्क्रीन ग्लिच से बचने के लिए तुरंत लोकल कैश लोड
     try {
-        let localRaw = localStorage.getItem('WATER_SCHEDULE_DATA');
+        let localRaw = localStorage.getItem('WATER_SCHEDULE_DATA_BIN_12');
         if (localRaw) {
             let localRecord = JSON.parse(localRaw);
             applyLoadedRecord(localRecord);
