@@ -828,6 +828,10 @@
     async function loadDataFromCloud() {
         if (isUserEditingLocally && !isAdmin) return;
 
+        // यदि यूज़र किसी इनपुट या चयन मेन्यू पर है तो ग्लिच से बचने के लिए रीलोड न करें
+        let isFocused = document.activeElement && ['INPUT', 'SELECT', 'TEXTAREA'].includes(document.activeElement.tagName);
+        if (isFocused && !isAdmin) return;
+
         try {
             let res = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}/latest`, { 
                 method: 'GET',
@@ -839,9 +843,13 @@
                 let jsonResponse = await res.json();
                 let record = jsonResponse.record;
                 if (record && (record.users || record.startDate)) {
-                    applyLoadedRecord(record);
-                    localStorage.setItem('WATER_SCHEDULE_DATA_BIN_12', JSON.stringify(record));
-                    calculateAll();
+                    let oldStr = localStorage.getItem('WATER_SCHEDULE_DATA_BIN_12');
+                    let newStr = JSON.stringify(record);
+                    if(oldStr !== newStr) {
+                        applyLoadedRecord(record);
+                        localStorage.setItem('WATER_SCHEDULE_DATA_BIN_12', newStr);
+                        calculateAll();
+                    }
                     return;
                 }
             }
@@ -919,11 +927,13 @@
         }
     }
 
+    // सुरक्षित बैकग्राउंड सिंक
     setInterval(() => {
-        if (!isAdmin && !isUserEditingLocally) {
+        let isFocused = document.activeElement && ['INPUT', 'SELECT', 'TEXTAREA'].includes(document.activeElement.tagName);
+        if (!isAdmin && !isUserEditingLocally && !isFocused) {
             loadDataFromCloud();
         }
-    }, 4000);
+    }, 6000);
 
     function calculateAll() {
         renderTable();
@@ -933,27 +943,39 @@
 
     function populateUserDropdown() {
         let select = document.getElementById('userSelect');
+        if (!select) return;
+        
+        // यदि यूज़र ड्रॉपडाउन पर टैप कर चुका है और फोकस है, तो ग्लिच से बचने के लिए इसे न बदलें
+        if (document.activeElement === select && select.options.length > 1) {
+            return;
+        }
+
         let currentSelectedValue = select.value; 
 
-        select.innerHTML = '<option value="">-- नाम चुनें --</option>';
-        
         let listToPopulate = [...Array(initialData.length).keys()];
         if (isTableReversed) {
             listToPopulate.reverse();
         }
 
-        listToPopulate.forEach((idx) => {
-            let row = initialData[idx];
-            let opt = document.createElement('option');
-            opt.value = idx; 
-            opt.text = row.name; 
-            select.appendChild(opt);
-        });
+        // जाँचें कि क्या ऑप्शन्स में बदलाव की ज़रूरत है
+        let currentNames = Array.from(select.options).slice(1).map(o => o.text).join('|');
+        let newNames = listToPopulate.map(idx => initialData[idx].name).join('|');
+
+        if (currentNames !== newNames) {
+            select.innerHTML = '<option value="">-- नाम चुनें --</option>';
+            listToPopulate.forEach((idx) => {
+                let row = initialData[idx];
+                let opt = document.createElement('option');
+                opt.value = idx; 
+                opt.text = row.name; 
+                select.appendChild(opt);
+            });
+        }
 
         if (currentSelectedValue !== "" && select.querySelector(`option[value="${currentSelectedValue}"]`)) {
             select.value = currentSelectedValue;
             findMyTurn();
-        } else {
+        } else if (currentSelectedValue === "") {
             document.getElementById('turnResult').innerHTML = "";
             document.getElementById('turnResult').style.display = 'none';
             document.getElementById('printSlipBtn').style.display = 'none';
@@ -992,7 +1014,7 @@
             let pureMins = (totalBigha > 0) ? (bigha * targetTotalMinutes / totalBigha) : 0;
             let extraMins = isOddType ? (parseFloat(row.oddMinutes) || 0) : (parseFloat(row.evenMinutes) || 0);
             if (i === 0 && ignoreFirstExtra) {
-                extraMins = 0; // मोड़ पर तुरंत शुरू होने वाले पहले व्यक्ति को अतिरिक्त समय नहीं
+                extraMins = 0;
             }
             let totalMins = pureMins + extraMins;
 
@@ -1362,11 +1384,13 @@
         return `${pad(newHrs12)}:${pad(newMins)}:${pad(newSecs)} ${newMod}`;
     }
 
+    // तारीख प्रारूप: DD माह YY (उदा: 30 अग० 26)
     function formatShortHindiDate(dateObj) {
         let day = String(dateObj.getDate()).padStart(2, '0');
         let monthNamesShort = ["जन०", "फ़र०", "मार्च", "अप्रैल", "मई", "जून", "जुलाई", "अग०", "सित०", "अक्टूबर", "नव०", "दिस०"];
         let monthShort = monthNamesShort[dateObj.getMonth()];
-        return `${day} ${monthShort}`;
+        let yearShort = String(dateObj.getFullYear()).slice(-2);
+        return `${day} ${monthShort} ${yearShort}`;
     }
 
     function generate30DaysCalendar() {
@@ -1477,7 +1501,7 @@
                 ${duesHtml}
             `;
         } else {
-            let slotOdd = getTurnSlotCustom(user, isTableReversed, hoursToDistribute, startStr, !isTableReversed, false);  
+            let slotOdd = getTurnSlotCustom(user, isTableReversed, hoursToDistribute, startStr, !isTableReversed, false); 
             let slotEven = getTurnSlotCustom(user, !isTableReversed, hoursToDistribute, startStr, isTableReversed, false); 
 
             let hPartOdd = Math.floor(slotOdd.minutes / 60), mPartOdd = Math.round(slotOdd.minutes % 60);
