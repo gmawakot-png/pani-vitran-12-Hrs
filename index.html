@@ -286,12 +286,12 @@
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-top:6px; gap:8px;">
                     <div>
                         <span style="font-size:11px; font-weight:bold; display:block;">वर्तमान तारीख:</span>
-                        <input type="date" id="startDateInput" style="width:130px; padding:4px; font-size:12px; border:1px solid #27ae60; border-radius:4px; font-weight:bold;" oninput="generate30DaysCalendar(); markDataDirty();">
+                        <input type="date" id="startDateInput" style="width:130px; padding:4px; font-size:12px; border:1px solid #27ae60; border-radius:4px; font-weight:bold;" oninput="generate30DaysCalendar(); markDataDirty();" onchange="generate30DaysCalendar(); markDataDirty();">
                     </div>
                     <div>
                         <span style="font-size:11px; font-weight:bold; display:block;">दिन का गैप:</span>
                         <div class="interval-box-container">
-                            <input type="text" inputmode="numeric" pattern="[0-9]*" id="intervalInput" value="4" oninput="generate30DaysCalendar(); markDataDirty();">
+                            <input type="text" inputmode="numeric" pattern="[0-9]*" id="intervalInput" value="4" oninput="generate30DaysCalendar(); markDataDirty();" onchange="generate30DaysCalendar(); markDataDirty();">
                             <div class="interval-arrows-btn">
                                 <button type="button" onclick="adjustInterval(1)">▲</button>
                                 <button type="button" onclick="adjustInterval(-1)">▼</button>
@@ -1387,7 +1387,7 @@
     // तारीख प्रारूप: DD माह YY (उदा: 30 अग० 26)
     function formatShortHindiDate(dateObj) {
         let day = String(dateObj.getDate()).padStart(2, '0');
-        let monthNamesShort = ["जन०", "फ़र०", "मार्च", "अप्रैल", "मई", "जून", "जुलाई", "अग०", "सित०", "अक्टूबर", "नव०", "दिस०"];
+        let monthNamesShort = ["जन०", "फ़र०", "मार्च", "अप्रैल", "मई", "जून", "जुला०", "अग०", "सित०", "अक्टू०", "नव०", "दिस०"];
         let monthShort = monthNamesShort[dateObj.getMonth()];
         let yearShort = String(dateObj.getFullYear()).slice(-2);
         return `${day} ${monthShort} ${yearShort}`;
@@ -1397,19 +1397,34 @@
         let startInput = document.getElementById('startDateInput').value;
         let interval = parseInt(document.getElementById('intervalInput').value) || 1;
         let listEl = document.getElementById('datesList');
-        listEl.innerHTML = '';
+        if (listEl) listEl.innerHTML = '';
         waterDates = [];
 
-        if(!startInput) return;
-        let currentDate = new Date(startInput);
+        if(!startInput) {
+            if (document.getElementById('userSelect') && document.getElementById('userSelect').value !== "") {
+                findMyTurn();
+            }
+            return;
+        }
+
+        // टाइमज़ोन बग से बचने हेतु सटीक तिथि गणना
+        let dateParts = startInput.split('-');
+        let currentDate = new Date(parseInt(dateParts[0]), parseInt(dateParts[1]) - 1, parseInt(dateParts[2]));
 
         for(let i=0; i<30; i++) {
             let dStr = formatShortHindiDate(currentDate);
             waterDates.push(dStr);
-            let li = document.createElement('li');
-            li.innerText = `${i+1}. दिनांक: ${dStr}`;
-            listEl.appendChild(li);
+            if (listEl) {
+                let li = document.createElement('li');
+                li.innerText = `${i+1}. दिनांक: ${dStr}`;
+                listEl.appendChild(li);
+            }
             currentDate.setDate(currentDate.getDate() + interval);
+        }
+
+        // तारीख बदलते ही कार्ड में तुरंत नई तारीखों का रिजल्ट अपडेट करें
+        if (document.getElementById('userSelect') && document.getElementById('userSelect').value !== "") {
+            findMyTurn();
         }
     }
 
